@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Hglm.github.io : hglm's blog" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Hglm.github.io</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/hglm">View on GitHub</a>
+
+          <h1 id="project_title">Hglm.github.io</h1>
+          <h2 id="project_tagline">hglm's blog</h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="optimizing-system-performance-of-flash-based-linux-systems" class="anchor" href="#optimizing-system-performance-of-flash-based-linux-systems"><span class="octicon octicon-link"></span></a>Optimizing system performance of flash-based Linux systems</h1>
+
+<p>Here are a few tips to improve interactive performance on flash (SD-card)-based devices running
+Linux, such as the Raspberry Pi, other ARM boards and tablets. These apply primarily to Debian and derived distros such as Raspbian, probably Ubuntu, and in general terms to most Linux distributions. </p>
+
+<p>When the root filesystem used on the device is a flash memory card or flash memory as will often be the case,  the performance bottleneck will often be write access to the root file system. It is therefore beneficial for overall system performance to reduce unnecessary writing by using methods such as ramdisk file systems, tmpfs, and reducing system logging activity.</p>
+
+<h3>
+<a name="reducing-system-logging-activity" class="anchor" href="#reducing-system-logging-activity"><span class="octicon octicon-link"></span></a>Reducing system logging activity</h3>
+
+<p>In a default distro install, system logging is often configured fully, suitable for a server or multi-user system.  However, on a single-user system the constant writing the many system log files will result in reduced interactive system performance, and reducing logging activity will be beneficial for performance as well as the lifetime of the flash memory.</p>
+
+<p>In a Debian Wheezy installation, the default system logger is rsyslog, and it configuration file is /etc/rsyslog.conf. In the rules section, the following logs are often enabled by default:</p>
+
+<pre><code> auth,authpriv.*                 /var/log/auth.log
+ *.*;auth,authpriv.none         -/var/log/syslog
+ cron.*                         /var/log/cron.log
+ daemon.*                       -/var/log/daemon.log
+ kern.*                         -/var/log/kern.log
+ lpr.*                          -/var/log/lpr.log
+ mail.*                         -/var/log/mail.log
+ user.*                         -/var/log/user.log
+</code></pre>
+
+<p>There may also be rules for -/var/log/debug and -/var/log/messages, and |/dev/xconsole.</p>
+
+<p>Note that kernel messages are logged in both kern.log and syslog, in addition to being available from the dmesg command from kernel memory. In a single user system, it is possible to disable most or all of these logs by placing a '#' character at the start of the corresponding lines. Logs can be re-enabled if it is necessary to debug a system problem.</p>
+
+<h3>
+<a name="optimizing-cache-directories" class="anchor" href="#optimizing-cache-directories"><span class="octicon octicon-link"></span></a>Optimizing cache directories</h3>
+
+<p>Applications like browsers and window managers that use a disk cache may conform to the XDG Base Directory Specification standard. In that case, the environment variable XDG_CACHE_HOME defines the directory where cache files are stored. By setting this variable to a ramdisk location, it is possible to greatly speed-up the performance of certain browsers that otherwise stall with heavy writing to the disk-cache in flash memory. For example, in a Debian Wheezy installation with LXDE, there may be a configuration file called /etc/alternatives/x-session-manager. By adding the line</p>
+
+<pre><code> export XDG_CACHE_HOME="/dev/shm/.cache"
+</code></pre>
+
+<p>to the start of this file, programs running in X conforming to the standard will be using the ramdisk in /dev/shm to store cache files. One browser popular on light-weight configurations that benefits form this is Midori. The default disk cache size in Midori is 100MB, you can lower this if you don't have much system memory available, but you can configure Midori to clean the cache on exit and thus give back the memory to the system in Tools-&gt;Clear Private Data.</p>
+
+<h3>
+<a name="using-tmpfs" class="anchor" href="#using-tmpfs"><span class="octicon octicon-link"></span></a>Using tmpfs</h3>
+
+<p>To mount /tmp and /var/tmp (the directories for temporary files used by programs) on a ramdisk, you may be able to add the following lines to /etc/fstab:</p>
+
+<pre><code> tmpfs    /tmp        tmpfs    defaults    0 0
+ tmpfs    /var/tmp    tmpfs    defaults    0 0
+</code></pre>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
