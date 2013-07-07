@@ -56,6 +56,15 @@ Linux, such as the Raspberry Pi, other ARM boards and tablets. These apply prima
 
 <p>Note that kernel messages are logged in both kern.log and syslog, in addition to being available from the dmesg command from kernel memory. In a single user system, it is possible to disable most or all of these logs by placing a '#' character at the start of the corresponding lines. Logs can be re-enabled if it is necessary to debug a system problem.</p>
 
+<p>When using the a X environment there are may also be a log-file called .xsession-errors in your home directory. This contains mostly irrelevant warnings and error messages from various applications and can grow quite large. Importantly, the constant writing to this file can really affect performance on a flash-based system. To disable it, edit the file /etc/X11/Xsession and change the line:</p>
+<pre><code> exec >> "$ERRFILE" 2>&1
+</code></pre>
+
+to
+
+<pre><code> exec >> /dev/null 2>&1
+</code></pre>
+
 <h3>
 <a name="optimizing-cache-directories" class="anchor" href="#optimizing-cache-directories"><span class="octicon octicon-link"></span></a>Optimizing cache directories</h3>
 
@@ -66,6 +75,12 @@ Linux, such as the Raspberry Pi, other ARM boards and tablets. These apply prima
 
 <p>to the start of this file, programs running in X conforming to the standard will be using the ramdisk in /dev/shm to store cache files. One browser popular on light-weight configurations that benefits form this is Midori. The default disk cache size in Midori is 100MB, you can lower this if you don't have much system memory available, but you can configure Midori to clean the cache on exit and thus give back the memory to the system in Tools-&gt;Clear Private Data.</p>
 
+<p>A better solution, and required if /etc/alternatives/x-sessions-manager is a binary file, is add the same line to a new file in /etc/profile.d/, for example /etc/profile.d/xdg_cache_home.sh, that will be executed at the start of every shell. The file should look like this:</p>
+
+<pre><code> #!/bin/bash
+export XDG_CACHE_HOME="/dev/shm/.cache"
+</code></pre>
+
 <h3>
 <a name="using-tmpfs" class="anchor" href="#using-tmpfs"><span class="octicon octicon-link"></span></a>Using tmpfs</h3>
 
@@ -74,6 +89,17 @@ Linux, such as the Raspberry Pi, other ARM boards and tablets. These apply prima
 <pre><code> tmpfs    /tmp        tmpfs    defaults    0 0
  tmpfs    /var/tmp    tmpfs    defaults    0 0
 </code></pre>
+
+<h3>
+<a name="fs-writeback" class="anchor" href="#fs_writeback"><span class="octicon octicon-link"></span></a>Changing the ext4 root filesystem to write-back mode</h3>
+
+<p>If your root ext4 root filesystem is mounted in ordered data mode, it is possible to improve performance by changing the filesystem type to write-back, which speeds up write operations. The disadvantage of this is that it increases the chances of losing data in case of a (hard) system crash, although it seems work reasonably safely. With recent versions of ext4 you must change the filesystem mount type using the tune2fs utility. It is not necessary to change settings in /etc/inittab, except perhaps to add the "noatime" option to your root filesystem for performance reasons if it is not already enabled. To change the filesystem to writeback mode, which will take effect on the next reboot, run as root:</p>
+
+<pre><code>tune2fs -o journal_data_writeback /dev/sdXn
+</code></pre>
+
+where /dev/sdXn is the device corresponding to your root partition.
+
       </section>
     </div>
 
